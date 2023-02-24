@@ -16,7 +16,7 @@ from .serializers import ChatSerializer
 
 
 # translator = Translator()
-load_dotenv()
+# load_dotenv()
 
 openai.api_key = str(os.getenv("OPENAI_API_KEY"))
 gkey=str(os.getenv('GOOGLE_TRANSLATE_API'))
