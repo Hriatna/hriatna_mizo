@@ -134,7 +134,7 @@ WSGI_APPLICATION = 'ai_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'HriatnaAI$HriatnaAI$default',
+        'NAME': 'HriatnaAI$default',
         'USER': 'HriatnaAI',
         'PASSWORD': 'Thufingte123456',
         'HOST': 'HriatnaAI.mysql.pythonanywhere-services.com',
