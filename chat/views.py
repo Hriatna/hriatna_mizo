@@ -82,6 +82,7 @@ def mizo_ai(request):
            max_tokens=500)
         print("openai response" ,openai_response)
         result_in_english = openai_response['choices'][0].text
+        chat.original_response=result_in_english
 
         language_detect= requests.post('https://translation.googleapis.com/language/translate/v2/detect',data={'q':result_in_english,'key':gkey})
         language =language_detect.json()['data']['detections'][0][0]['language']

@@ -10,6 +10,7 @@ class Chat(models.Model):
     query=models.TextField(blank=True)
     translated_query=models.TextField(blank=True)
     query_timestamp = models.DateTimeField(null=True)
+    original_response = models.TextField(blank=True)
     response = models.TextField(blank=True)
     response_timestamp = models.DateTimeField(null=True)
     final_language = models.CharField(max_length=10,null=True)
