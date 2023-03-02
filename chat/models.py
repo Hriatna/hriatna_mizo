@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import math
 
 # Create your models here.
 
@@ -17,5 +18,9 @@ class Chat(models.Model):
     language_confidence = models.FloatField(null=True,blank=True)
     created = models.IntegerField(null=True)
     duration = models.FloatField(null=True,blank=True)
+
+    def __str__(self) :
+    
+        return f'{self.duration}  {self.query}'
 
     
