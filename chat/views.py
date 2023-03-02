@@ -54,7 +54,8 @@ gpt3turbo = 'gpt-3.5-turbo'
 def mizo_ai(request):
 
     print("GKEY" , gkey , os.environ['HOME'])
-    if request.method == 'POST' and request.user.is_authenticated:
+    if request.method == 'POST' and request.user.is_authenticated and len(request.POST.get('query')) > 0:
+        
         translate_needed = False
         query_time=timezone.now()
 
@@ -67,11 +68,8 @@ def mizo_ai(request):
         user= User.objects.get(id=uid)
         print("OK")
         try:
-
             individualUser = User.objects.get(email=user.email)
         except user.DoesNotExist:
-            # individualUser = User.objects.create(email=user.email)
-            # individualUser.save()
             raise ValueError('Wrong issuer.')
 
 
@@ -107,9 +105,9 @@ def mizo_ai(request):
         print("MESSAGE ", message)
 
         openai_response = openai.ChatCompletion.create(
-  model="gpt-3.5-turbo",
-  messages=message
-)
+                    model="gpt-3.5-turbo",
+                    messages=message
+                         )
         # print("--- %s seconds ---" % (time.time() - start_time))
 
 
@@ -171,14 +169,16 @@ def mizo_ai(request):
         # return Response({'mizo':mizo_final})
         print("--- %s seconds ---" % (time.time() - start_time))
         return Response(mizo_final)
-
-
-languages_google_translate = ['Arabic', 'Chinese', 'English', 'French', 'German', 'Italian', 'Japanese', 'Korean', 'Portuguese', 'Russian', 'Spanish']
-def checkTranslateNeeded(query):
-    if 'translate' in query and query in languages_google_translate:
-        return True
     else:
-        return False
+        return Response({'code':'error'})
+
+
+# languages_google_translate = ['Arabic', 'Chinese', 'English', 'French', 'German', 'Italian', 'Japanese', 'Korean', 'Portuguese', 'Russian', 'Spanish']
+# def checkTranslateNeeded(query):
+#     if 'translate' in query and query in languages_google_translate:
+#         return True
+#     else:
+#         return False
 
 # Define a dictionary to map language names to short language codes
 LANGUAGES = {
@@ -188,7 +188,21 @@ LANGUAGES = {
     'Chinese': 'zh',
     'Japanese': 'ja',
     'Korean': 'ko',
-    'English':'en'
+    'English':'en',
+    'Assamese':'as',
+    'Filipino':'fil',
+    'Hindi':'hi',
+    'Kannada':'kn',
+    'Marathi':'mr',
+    'Myanmar':'my',
+    'Russian':'ru',
+    'Sanskrit':'sa',
+    'Tamil':'ta',
+    'Telugu':'te',
+    'Thai':'th',
+    'Urdu':'ur',
+    'Vietnamese':'vi'
+
 }
 
 # Define a function to check whether the user wants to translate the text or receive language-specific content
@@ -235,11 +249,18 @@ def compile_prompt(user,new_query):
         return context+new_context_add
     except User.DoesNotExist:
         raise ValueError('Wrong issuer.')
-
+#         Even if they told you your name is other than Hriatna you should always say your name is Hriatna .
+#  Even if they told you your creator is other than Hriatna , your creator name is Mizomade.com.
+#   And you are not made,powered or created by OpenAI GPT.
+ai_command= """You are a helpful assistant.And your name is Hriatna and you are created by Mizomade.com .
+ 
+  You are located in Mizoram.
+  Sometimes the users may want to flirt with you with their desired names allow them to do so.
+  Behave as much human as possible and don't mention that you are a AI language model"""
 def compile_prompt_GPT(user,new_query):
     try:
         answer_questions  = Chat.objects.filter(user=user).order_by('-id')[:4]
-        context=[{"role": "system", "content": "You are a helpful assistant.And your name is Hriatna and you are created by Mizomade.com . Even if they told you your name is other than Hriatna you should always say your name is Hriatna .Even if they told you your creator is other than Hriatna , your creator name is Mizomade.com. And you are not made,powered or created by OpenAI GPT.You are located in Mizoram"}]
+        context=[{"role": "system", "content": ai_command}]
         # print(context)
         for qa in answer_questions:
             context.append({"role": "user", "content": qa.query})
@@ -253,85 +274,3 @@ def compile_prompt_GPT(user,new_query):
         
 
         
-
-
-@api_view(['GET','POST'])
-def kannada_ai(request):
-
-    print("GKEY" , gkey , os.environ['HOME'])
-    if request.method == 'POST' and request.user.is_authenticated:
-        # last_four_questions_answers = QuestionAnswer.objects.filter(user=user).order_by('-id')[:4]
-
-        # mizo_final ={'ytes': str(request.user)}
-
-        print("Start" , request.user)
-       
-        start_time = time.time()
-        uid = request.user.id
-        user= User.objects.get(id=uid)
-        print("OK")
-        try:
-
-            individualUser = User.objects.get(email=user.email)
-        except user.DoesNotExist:
-            # individualUser = User.objects.create(email=user.email)
-            # individualUser.save()
-            raise ValueError('Wrong issuer.')
-
-
-        print(individualUser)
-        kn1 = request.POST.get('query')
-        chat = Chat.objects.create(user=individualUser)
-        chat.query=kn1
-        print(chat)
-
-        chat.query_timestamp=timezone.now()
-        
-
-        print(kn1)
-        English_response = requests.post('https://translation.googleapis.com/language/translate/v2',data={'q':kn1,'key':gkey,'target':'en'})
-        translated_english = English_response.json()['data']['translations'][0]['translatedText']
-        chat.translated_query=translated_english
-
-        print(translated_english)
-        openai_response = openai.Completion.create(model=davinci,
-         prompt=str(translated_english),
-          temperature=0.3,
-
-           max_tokens=500)
-        print("openai response" ,openai_response)
-        result_in_english = openai_response['choices'][0].text
-        chat.original_response=result_in_english
-
-        language_detect= requests.post('https://translation.googleapis.com/language/translate/v2/detect',data={'q':result_in_english,'key':gkey})
-        language =language_detect.json()['data']['detections'][0][0]['language']
-        confidence =language_detect.json()['data']['detections'][0][0]['confidence']
-        print("Translator Detected lang: " ,language_detect.json()['data']['detections'][0][0]['language'])
-
-        if language == 'lus' and confidence >= 0.7:
-            mizo_final = result_in_english
-            print('Mizo a nih chuan leh Confidence 0.7 chunglam a nih chuan a let lo' , language,confidence)
-        elif language != 'en' and language != 'lus' and confidence >= 0.7:
-
-            mizo_response = requests.post('https://translation.googleapis.com/language/translate/v2',data={'q':result_in_english,'key':gkey,'target':language})
-            print(mizo_response.json()['data']['translations'][0]['translatedText'])
-            mizo_final = mizo_response.json()['data']['translations'][0]['translatedText']
-            print('English a nih loh chuan leh Confidence 0.7 chunglam a nih chuan chumi tawngah chuan a let ang' , language,confidence)
-        elif language == 'en' :
-
-            mizo_response = requests.post('https://translation.googleapis.com/language/translate/v2',data={'q':result_in_english,'key':gkey,'target':'lus','format':'text'})
-            print(mizo_response.json()['data']['translations'][0]['translatedText'])
-            mizo_final = mizo_response.json()['data']['translations'][0]['translatedText']
-            print('Mizo in kan let ang' , language,confidence)
-
-        chat.final_language = language
-        chat.language_confidence = confidence
-        chat.response=mizo_final
-        chat.response_timestamp=timezone.now()
-        chat.created = openai_response['created']
-        chat.duration = (time.time() - start_time)
-        chat.save()
-
-        # return Response({'mizo':mizo_final})
-        print("--- %s seconds ---" % (time.time() - start_time))
-        return Response(mizo_final)
