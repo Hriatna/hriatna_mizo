@@ -16,13 +16,30 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
         path('dj-rest-auth/', include('dj_rest_auth.urls')),
         path('account/', include('account.urls')),
         path('api/', include('chat.urls')),
+        path('api/info/', include('info.urls')),
 
 
 
-]
+
+        ]
+
+
+if settings.DEBUG:
+    urlpatterns = [
+    # ... the rest of your URLconf goes here ...
+     path('admin/', admin.site.urls),
+        path('dj-rest-auth/', include('dj_rest_auth.urls')),
+        path('account/', include('account.urls')),
+        path('api/', include('chat.urls')),
+        path('api/info/', include('info.urls')),
+
+
+        ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
