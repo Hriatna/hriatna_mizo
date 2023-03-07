@@ -50,6 +50,7 @@ import time
 davinci = "text-davinci-003"
 currie = "text-curie-001"
 gpt3turbo = 'gpt-3.5-turbo'
+default_lang ='lus'
 @api_view(['GET','POST'])
 def mizo_ai(request):
 
@@ -75,8 +76,11 @@ def mizo_ai(request):
 
         print(individualUser)
         mizo1 = request.POST.get('query')
+        msg_id = request.POST.get('msgID')
+
         chat = Chat.objects.create(user=individualUser)
         chat.query=mizo1
+        # chat.msgID =msg_id
         print(chat)
 
         chat.query_timestamp=query_time
@@ -142,10 +146,10 @@ def mizo_ai(request):
             confidence =language_detect.json()['data']['detections'][0][0]['confidence']
             print("Translator Detected lang: " ,language_detect.json()['data']['detections'][0][0]['language'])
 
-            if language == 'lus' and confidence >= 0.7:
+            if language == default_lang and confidence >= 0.7:
                 mizo_final = result_in_english
                 print('Mizo a nih chuan leh Confidence 0.7 chunglam a nih chuan a let lo' , language,confidence)
-            elif language != 'en' and language != 'lus' and confidence >= 0.7:
+            elif language != 'en' and language != default_lang and confidence >= 0.7:
 
                 mizo_response = requests.post('https://translation.googleapis.com/language/translate/v2',data={'q':result_in_english,'key':gkey,'target':language})
                 print(mizo_response.json()['data']['translations'][0]['translatedText'])
@@ -153,7 +157,7 @@ def mizo_ai(request):
                 print('English a nih loh chuan leh Confidence 0.7 chunglam a nih chuan chumi tawngah chuan a let ang' , language,confidence)
             elif language == 'en' :
 
-                mizo_response = requests.post('https://translation.googleapis.com/language/translate/v2',data={'q':result_in_english,'key':gkey,'target':'lus','format':'text'})
+                mizo_response = requests.post('https://translation.googleapis.com/language/translate/v2',data={'q':result_in_english,'key':gkey,'target':default_lang,'format':'text'})
                 print(mizo_response.json()['data']['translations'][0]['translatedText'])
                 mizo_final = mizo_response.json()['data']['translations'][0]['translatedText']
                 print('Mizo in kan let ang' , language,confidence)
@@ -194,6 +198,7 @@ LANGUAGES = {
     'Hindi':'hi',
     'Kannada':'kn',
     'Marathi':'mr',
+    'Mizo':'lus',
     'Myanmar':'my',
     'Russian':'ru',
     'Sanskrit':'sa',

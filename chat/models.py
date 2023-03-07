@@ -8,6 +8,8 @@ import math
 
 class Chat(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
+    msgID = models.CharField(max_length=100,null=True)
+
     query=models.TextField(blank=True)
     translated_query=models.TextField(blank=True)
     query_timestamp = models.DateTimeField(null=True)
