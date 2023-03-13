@@ -118,7 +118,7 @@ def en_ai(request):
 
         # return Response({'mizo':mizo_final})
         print("--- %s seconds ---" % (time.time() - start_time))
-        return Response(mizo_final)
+        return Response({'data':mizo_final,'id':msg_id+'a'})
     else:
         return Response({'code':'error'})
 
@@ -249,7 +249,7 @@ def mizo_ai(request):
 
         # return Response({'mizo':mizo_final})
         print("--- %s seconds ---" % (time.time() - start_time))
-        return Response(mizo_final)
+        return Response({'data':mizo_final,'id':msg_id+['a']})
     else:
         return Response({'code':'error'})
 
