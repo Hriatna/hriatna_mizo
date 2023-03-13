@@ -324,8 +324,8 @@ def messages(request):
 def delete_message(request):
     if request.method == 'POST' and request.user.is_authenticated:
         msg_id = request.POST.get('msgID')
-        delete_request = request.POST.get('deleteRequest')
-        delete_response = request.POST.get('deleteResponse')
+        delete_request = int(request.POST.get('deleteRequest'))
+        delete_response = int(request.POST.get('deleteResponse'))
 
         token_key = str(request.headers['Authorization'])[6:]
         token = Token.objects.get(key=str(token_key))
