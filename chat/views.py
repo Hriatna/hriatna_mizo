@@ -12,7 +12,10 @@ from django.contrib.auth.models import User
 from dotenv import load_dotenv
 from rest_framework.authtoken.models import Token
 from .serializers import ChatSerializer
+from django.shortcuts import get_object_or_404
 
+
+import time
 
 
 # translator = Translator()
@@ -45,12 +48,86 @@ def openai_response(request):
     if request.method == 'GET':
         return Response("GETTED")
 
-import time
+
+
+@api_view(['GET','POST'])
+def en_ai(request):
+
+    print("GKEY" , gkey , os.environ['HOME'])
+    if request.method == 'POST' and request.user.is_authenticated and len(request.POST.get('query')) > 0:
+        
+        translate_needed = False
+        query_time=timezone.now()
+
+        mizo_final ={'ytes': str(request.user)}
+
+        print("Start" , request.user)
+       
+        start_time = time.time()
+        uid = request.user.id
+        user= User.objects.get(id=uid)
+        print("OK")
+        try:
+            individualUser = User.objects.get(email=user.email)
+        except user.DoesNotExist:
+            raise ValueError('Wrong issuer.')
+
+
+        print(individualUser)
+        mizo1 = request.POST.get('query')
+        msg_id = request.POST.get('msgID')
+
+        chat = Chat.objects.create(user=individualUser)
+        chat.query=mizo1
+        chat.msgID =msg_id
+        print(chat)
+
+        chat.query_timestamp=query_time
+ 
+        
+
+        # for openai use below
+        # prompt  = compile_prompt(user,translated_english)
+        # openai_response = openai.Completion.create(model=davinci,
+        #  prompt=prompt,
+        #      temperature=TEMPERATURE,
+        # max_tokens=MAX_TOKENS,
+        # top_p=1,
+        # frequency_penalty=FREQUENCY_PENALTY,
+        # presence_penalty=PRESENCE_PENALTY,)
+
+        message  = compile_prompt_GPT(user,mizo1)
+
+
+        openai_response = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=mizo1
+                         )
+        print("openai response" ,openai_response)
+        # for openai client use the below
+        # result_in_english = openai_response['choices'][0].text
+        result_in_english = openai_response['choices'][0]["message"]["content"]
+      
+        chat.original_response=result_in_english
+
+        chat.response=mizo_final
+        chat.response_timestamp=timezone.now()
+        chat.created = openai_response['created']
+        chat.duration = (time.time() - start_time)
+        chat.save()
+
+        # return Response({'mizo':mizo_final})
+        print("--- %s seconds ---" % (time.time() - start_time))
+        return Response(mizo_final)
+    else:
+        return Response({'code':'error'})
+
 
 davinci = "text-davinci-003"
 currie = "text-curie-001"
 gpt3turbo = 'gpt-3.5-turbo'
 default_lang ='lus'
+
 @api_view(['GET','POST'])
 def mizo_ai(request):
 
@@ -80,7 +157,7 @@ def mizo_ai(request):
 
         chat = Chat.objects.create(user=individualUser)
         chat.query=mizo1
-        # chat.msgID =msg_id
+        chat.msgID =msg_id
         print(chat)
 
         chat.query_timestamp=query_time
@@ -242,6 +319,22 @@ def messages(request):
         chats = Chat.objects.filter(user=user)
         serializer = ChatSerializer(chats,many=True)
         return Response({'data':serializer.data})
+    
+@api_view(['POST'])
+def delete_message(request):
+    if request.method == 'POST' and request.user.is_authenticated:
+        msg_id = request.POST.get('msgID')
+        token_key = str(request.headers['Authorization'])[6:]
+        token = Token.objects.get(key=str(token_key))
+        user = User.objects.get(id=token.user_id)
+        chat = get_object_or_404(Chat, msgID=msg_id)
+        if chat.user.id == user.id:
+            chat.delete()
+            return Response({'message': 'Message deleted successfully'}, status=200)
+        else:
+            return Response({'message': 'You are not authorized to delete this message'}, status=403)
+
+
 
 
 def compile_prompt(user,new_query):
