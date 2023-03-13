@@ -249,7 +249,7 @@ def mizo_ai(request):
 
         # return Response({'mizo':mizo_final})
         print("--- %s seconds ---" % (time.time() - start_time))
-        return Response({'data':mizo_final,'id':msg_id+['a']})
+        return Response({'data':mizo_final,'id':msg_id+'a'})
     else:
         return Response({'code':'error'})
 
