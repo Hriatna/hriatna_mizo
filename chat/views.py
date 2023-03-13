@@ -324,12 +324,25 @@ def messages(request):
 def delete_message(request):
     if request.method == 'POST' and request.user.is_authenticated:
         msg_id = request.POST.get('msgID')
+        delete_request = request.POST.get('deleteRequest')
+        delete_response = request.POST.get('deleteResponse')
+
         token_key = str(request.headers['Authorization'])[6:]
         token = Token.objects.get(key=str(token_key))
         user = User.objects.get(id=token.user_id)
         chat = get_object_or_404(Chat, msgID=msg_id)
         if chat.user.id == user.id:
-            chat.delete()
+            if delete_request == 1 and delete_response == 0:
+                chat.query =None
+                chat.translated_query = None
+                chat.save()
+            elif delete_request == 0 and delete_response == 1:
+                chat.original_response =None
+                chat.response = None
+                chat.save()
+            
+            else:
+                chat.delete()
             return Response({'message': 'Message deleted successfully'}, status=200)
         else:
             return Response({'message': 'You are not authorized to delete this message'}, status=403)
