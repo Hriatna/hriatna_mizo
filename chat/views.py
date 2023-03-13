@@ -101,7 +101,7 @@ def en_ai(request):
 
         openai_response = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
-                    messages=mizo1
+                    messages=message
                          )
         print("openai response" ,openai_response)
         # for openai client use the below
@@ -118,7 +118,7 @@ def en_ai(request):
 
         # return Response({'mizo':mizo_final})
         print("--- %s seconds ---" % (time.time() - start_time))
-        return Response({'data':mizo_final,'id':msg_id+'a'})
+        return Response({'data':result_in_english,'id':msg_id+'a'})
     else:
         return Response({'code':'error'})
 
